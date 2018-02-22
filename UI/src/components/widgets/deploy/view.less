@@ -1,15 +1,113 @@
 @import (reference) '../../../app/css/variables.less';
 @import (reference) '../../../app/css/mixins.less';
 @import (less)  '../../../../bower_components/angular-ui-select/dist/select.css';
+@import (reference) '../../../../bower_components/bootstrap/less/mixins/gradients.less';
 
 .deploy-config hr {
     margin: 30px 0;
 }
 
+
 #dashboard {
-    .deploy-view {
-        .table {
-            margin-bottom: 0;
+
+	    .deploy-view {
+	     .tooltip.myClass .tooltip-inner{
+		color:white;
+		background-color:grey;
+ 	      }
+	    
+	    .failed{
+	    	background-color: red;
+	    	color:white;
+	    }
+	    .warning{
+	    	background-color: grey;
+	    	color:white;
+	    }
+	    .success{
+	    	background-color: green;
+	    	color:white;
+	    }
+	    .not-triggered{
+	    	background-color: blue;
+	    	color:white;
+	    }
+     
+       .pipeline-environment-header {
+            width:100%;
+            span {
+                //@th-height: 6rem;
+                //@arrow-size: @th-height/2;
+                //color: @text-color;
+                text-align: center;
+                //line-height: @th-height;
+                //margin-left: -2rem;
+                //padding-left: 2rem;
+                display: inline;
+                width: 25%;
+                border:1px groove white; 
+                //position: relative;
+
+                /*@pass-light: lighten(@dash-status-pass, 5%);
+                #gradient > .horizontal(darken(@dash-status-pass, 5%), @pass-light);*/
+
+                &:before, &:after {
+                    content: '';
+                    width: 0;
+                    height: 0;
+                    display: inline-block;
+                    position: absolute;
+
+                    top: 0;
+
+                  //  border-top: @arrow-size solid transparent;
+                   // border-bottom: @arrow-size solid transparent;
+                   // border-left: @arrow-size solid @pass-light;
+                }
+
+                &:before {
+                    left: 0;
+                    border-left-color: @dash-dashboard-bg;
+                }
+
+                &:after {
+                    //right: -@arrow-size;
+                    z-index: 1;
+                }
+            }
+
+            &:nth-child(1) span:before {
+                display: none;
+            }
+
+            &.down span {
+                @fail-light: lighten(@dash-status-fail, 5%);
+                #gradient > .horizontal(darken(@dash-status-fail, 5%), @fail-light);
+
+                &:after {
+                    border-left-color: @fail-light;
+                }
+            }
+
+            /*&:last-of-type span:after {
+                border: .1rem solid #eee;
+                width: 2.7rem;
+                right: -2.7rem;
+                height: 100%;
+                display: inline-block;
+                background-color: #eee;
+                background-image: linear-gradient(45deg, black 25%, transparent 25%, transparent 75%, black 75%, black),
+                linear-gradient(45deg, black 25%, transparent 25%, transparent 75%, black 75%, black);
+                background-size: 2.5rem 2.5rem;
+                background-position:0 0, 1.25rem 1.25rem;
+            }*/
+        }
+         .table {
+            margin-bottom: 0;      
+        }
+        
+        .dash-row{
+        	border-spacing:20px;
         }
 
         td {
@@ -20,18 +118,23 @@
 
         .environment-name {
             .text-lg;
-            max-width: 8rem;
+            //max-width:8rem;
+            max-width: 6rem;
         }
 
         .deploy-server-count {
-            min-width: 6rem;
-            max-width: 10rem;
+        /*
+        	min-width:6rem;
+        	max-width:10rem;
+        */
+            min-width: 4rem;
+            max-width: 8rem;
         }
 
         .server-count {
             .text-lg;
             font-weight: bold;
-            text-align: right;
+            text-align: center;
         }
 
         .servers-up {
@@ -78,10 +181,6 @@
     .server-count {
         color: #777;
         .text-2x-bold;
-
-        .fa-arrow-up {
-            padding-right: .25em;
-        }
     }
 
     .servers-up {

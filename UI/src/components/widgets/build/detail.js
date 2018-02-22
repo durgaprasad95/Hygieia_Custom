@@ -11,7 +11,6 @@
     BuildWidgetDetailController.$inject = ['$scope', '$uibModalInstance', 'build', 'collectorName', 'collectorNiceName'];
     function BuildWidgetDetailController($scope, $uibModalInstance, build, collectorName, collectorNiceName) {
         var ctrl = this;
-
         ctrl.build = build;
         ctrl.collectorName = collectorName;
         ctrl.collectorNiceName = collectorNiceName;

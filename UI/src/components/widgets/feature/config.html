@@ -7,7 +7,7 @@
 		<div class="form-group clearfix"
 			 ng-class="{'has-error': (configForm.collectorItemId.$invalid || configForm.selectedProject.$invalid) && ctrl.submitted}">
 
-			<form-group input="collectorId" class="col-sm-push-2 col-sm-8" errors="{required:'Please select a valid feature data source'}">
+			<form-group input="collectorId" class="col-sm-push-2 col-sm-8" errors="{'required':'Please select a valid feature data source'}">
 				<label class="modal-label">Agile Content Tool Type:</label>
 				<select
 						name="collectorId" class="form-control" ng-model="ctrl.collectorId"
@@ -22,14 +22,14 @@
 					a valid feature data source</p>
 			</form-group>
 
-			<form-group input="projectName" ng-hide="ctrl.hideProjectDropDown" class="col-sm-push-2 col-sm-8"  errors="{required:'Please select a valid project',anyError:'Project and/or Team selection required'}" >
+			<form-group input="projectName" ng-hide="ctrl.hideProjectDropDown" class="col-sm-push-2 col-sm-8"  errors="{'anyError':'Project and/or Team selection required'}" >
 				<label class="modal-label">Project Name:</label>
 				<input
 						type="text"
 						name="projectName"
 						class="form-control"
 						placeholder="Search for a project name"
-						ng-model="ctrl.projectName"
+						ng-model="ctrl.teamName"
 						uib-typeahead="suspect.name as suspect.name for suspect in ctrl.getProjectNames($viewValue)"
 						typeahead-focus
 						typeahead-on-select="ctrl.onSelectProject($item,configForm)"
@@ -37,10 +37,11 @@
 						typeahead-wait-ms="250"
 						autocomplete="off"
 						typeahead-no-results="noResults"
-						required>
+						required
+						>
 			</form-group>
 
-			<form-group input="teamName" ng-hide="ctrl.hideTeamDropDown"  class="col-sm-push-2 col-sm-8" errors="{required:'Please select a valid team',teamError:'Project and/or Team selection required'}">
+			<form-group input="teamName" ng-hide="ctrl.collectorId.value === 'Rally' || ctrl.hideTeamDropDown"  class="col-sm-push-2 col-sm-8" errors="{required:'Please select a valid team',teamError:'Project and/or Team selection required'}">
 				<label class="modal-label">Team Name:</label>
 				<input
 						type="text"

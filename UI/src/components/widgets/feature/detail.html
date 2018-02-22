@@ -1,0 +1,31 @@
+<widget-modal widget-modal-close="true">
+<div class="widget-detail build-detail">
+	<div class="widget-detail-heading">
+		<div class="row">
+			<div class="col-md-3 build-desc">
+				<span class="build-number">User Stories</span>
+			</div>
+		</div>
+	</div>
+	<div class="widget-detail-body">
+		<span class="no-changesets" ng-hide="detailStory.stories.length">No
+			User Stories</span>
+		<table class="table" ng-show="detailStory.stories.length">
+			<thead>
+				<tr>
+					<th>US#</th>
+					<th>Description</th>
+					<th>Sprint #</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="story in detailStory.stories">
+					<td>{{::story.sNumber}}</td>
+					<td>{{::story.sName}}</td>
+					<td>{{::story.sSprintName}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+</widget-modal>

@@ -35,15 +35,13 @@
             }
         }
 
-        tr:last-of-type td {
+        tr:first-child td {
             .text-standard;
             background: none;
             vertical-align: top;
             &:not(:first-child) {
-                border-top: 1px solid @dash-divider;
+                border-bottom: 1px solid @dash-divider;
             }
         }
     }
 }
-
-

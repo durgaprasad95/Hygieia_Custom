@@ -1,0 +1,34 @@
+<widget-modal widget-modal-close="true">
+<div class="widget-detail build-detail">
+	<div class="widget-detail-heading">
+		<div class="row">
+			<div class="col-md-4">
+				<div class="build-desc">User Story:</div>
+				<div class="build-time">{{::detailEpic.number}}</div>
+			</div>
+			<div class="col-md-8">
+				<div class="build-desc">Description:</div>
+				<div class="build-time">{{::detailEpic.description}}</div>
+			</div>
+		</div>
+	</div>
+	<div class="widget-detail-body">
+		<table class="table">
+			<thead>
+				<tr>
+					<th>US#</th>
+					<th>Description</th>
+					<th>Sprint #</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="story in detailEpic.epic">
+					<td>{{::story.sNumber}}</td>
+					<td>{{::story.sName}}</td>
+					<td>{{::story.sSprintName}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+</widget-modal>

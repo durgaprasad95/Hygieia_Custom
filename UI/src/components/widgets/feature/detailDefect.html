@@ -1,0 +1,33 @@
+<widget-modal widget-modal-close="true">
+<div class="widget-detail build-detail">
+	<div class="widget-detail-heading">
+		<div class="row">
+			<div class="col-md-3 build-desc">
+				<span class="build-number">Defects</span>
+			</div>
+		</div>
+	</div>
+	<div class="widget-detail-body">
+		<span class="no-changesets" ng-hide="detailDefect.defects.length">No
+			Defects</span>
+		<table class="table" ng-show="detailDefect.defects.length">
+			<thead>
+				<tr>
+					<th>DE#</th>
+					<th>Description</th>
+					<th>Sprint #</th>
+					<th>Raised In:Sprint #</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="defect in detailDefect.defects">
+					<td>{{::defect.sNumber}}</td>
+					<td>{{::defect.sName}}</td>
+					<td>{{::defect.sSprintName}}</td>
+					<td>{{::defect.changeDate}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+</widget-modal>

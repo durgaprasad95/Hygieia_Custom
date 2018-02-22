@@ -53,7 +53,8 @@
       ]
     },
     "bootstrap": {
-      "dependencies": {}
+      "dependencies": {
+      }
     },
     "chartist": {
       "main": [

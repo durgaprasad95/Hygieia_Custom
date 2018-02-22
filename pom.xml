@@ -190,9 +190,11 @@
         <module>collectors/build/jenkins-codequality</module>
         <module>collectors/build/sonar</module>
         <module>collectors/cloud/aws</module>
+		<module>collectors/deploy/blade</module>
         <module>collectors/deploy/udeploy</module>
         <module>collectors/deploy/xldeploy</module>
         <module>collectors/feature/jira</module>
+		<module>collectors/feature/rally</module>
         <module>collectors/feature/versionone</module>
         <module>collectors/feature/gitlab</module>
         <module>collectors/misc/chat-ops</module>
@@ -237,9 +239,11 @@
         <module>collectors/build/jenkins-codequality</module>
         <module>collectors/build/sonar</module>
         <module>collectors/cloud/aws</module>
+		<module>collectors/deploy/blade</module>
         <module>collectors/deploy/udeploy</module>
         <module>collectors/deploy/xldeploy</module>
         <module>collectors/feature/jira</module>
+		<module>collectors/feature/rally</module>
         <module>collectors/feature/versionone</module>
         <module>collectors/feature/gitlab</module>
         <module>collectors/misc/chat-ops</module>
