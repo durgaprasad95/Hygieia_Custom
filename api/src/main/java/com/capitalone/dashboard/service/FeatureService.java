@@ -14,6 +14,19 @@ import org.bson.types.ObjectId;
 public interface FeatureService {
 
 	/**
+	 * Assigns Release by which we filter out Features for a team
+	 * 
+	 * @param componentId
+	 *            The ID of the related UI component that will reference collector
+	 *            item content from this collector
+	 * @param teamId
+	 *            A given scope-owner's source-system ID
+	 * 
+	 * @return A data response String which represents release version
+	 */
+	DataResponse<String> getRelease(ObjectId componentId, String teamId);
+
+	/**
 	 * Retrieves all stories for a given team and their current sprint
 	 * 
 	 * @param componentId
@@ -27,8 +40,23 @@ public interface FeatureService {
 	 * @return A data response list of type Feature containing all features for the
 	 *         given team and current sprint
 	 */
-	DataResponse<List<Feature>> getRelevantStories(ObjectId componentId, String teamId, String projectId,
-			Optional<String> agileType);
+	DataResponse<List<Feature>> getRelevantStories(ObjectId componentId, String teamId, Optional<String> agileType);
+
+	DataResponse<Map<String, List<Feature>>> getStories(ObjectId componentId);
+
+	/**
+	 * Calculates count of particular Features types for a team
+	 * 
+	 * @param componentId
+	 *            The ID of the related UI component that will reference collector
+	 *            item content from this collector
+	 * @param agiletype
+	 *            A given String assigned from UI
+	 * 
+	 * @return A data response list of type Feature containing feature Type and its
+	 *         Count
+	 */
+	DataResponse<Map<String, Long>> getCount(ObjectId componentId, String agileType);
 
 	/**
 	 * Retrieves a single story based on a back-end story number
@@ -61,8 +89,10 @@ public interface FeatureService {
 	 *         plus their sub features' estimates associated to the current sprint
 	 *         and team
 	 */
-	DataResponse<List<Feature>> getFeatureEpicEstimates(ObjectId componentId, String teamId, String projectId,
-			Optional<String> agileType, Optional<String> estimateMetricType);
+	DataResponse<List<Feature>> getFeatureEpicEstimates(ObjectId componentId, String teamId, Optional<String> agileType,
+			Optional<String> estimateMetricType);
+
+	DataResponse<Collection<Feature>> getSuperStories(ObjectId componentId);
 
 	/**
 	 * Retrieves estimate total of all features in the current sprint and for the
@@ -144,8 +174,8 @@ public interface FeatureService {
 	 * @return A data response list of type Feature containing the done estimate
 	 *         number for all features
 	 */
-	DataResponse<SprintEstimate> getAggregatedSprintEstimates(ObjectId componentId, String teamId, String projectId,
-			Optional<String> agileType, Optional<String> estimateMetricType);
+	DataResponse<SprintEstimate> getAggregatedSprintEstimates(ObjectId componentId, String teamId,
+			Optional<String> agileType, Optional<String> estimateMetricType);;
 
 	/**
 	 * Retrieves the current sprint's detail for a given team.
@@ -161,24 +191,6 @@ public interface FeatureService {
 	 * @return A data response list of type Feature containing several relevant
 	 *         sprint fields for the current team's sprint
 	 */
-	DataResponse<List<Feature>> getCurrentSprintDetail(ObjectId componentId, String teamId, String projectId,
-			Optional<String> agileType);
-
-	DataResponse<List<Feature>> getRelevantStories(ObjectId componentId, String teamId, Optional<String> agileType);
-
-	DataResponse<List<Feature>> getFeatureEpicEstimates(ObjectId componentId, String teamId, Optional<String> agileType,
-			Optional<String> estimateMetricType);
-
-	DataResponse<SprintEstimate> getAggregatedSprintEstimates(ObjectId componentId, String teamId,
-			Optional<String> agileType, Optional<String> estimateMetricType);
-
 	DataResponse<List<Feature>> getCurrentSprintDetail(ObjectId componentId, String teamId, Optional<String> agileType);
 
-	DataResponse<Map<String, Long>> getCount(ObjectId componentId, String agileType);
-
-	DataResponse<Collection<Feature>> getSuperStories(ObjectId componentId);
-
-	DataResponse<Map<String, List<Feature>>> getStories(ObjectId componentId);
-
-	DataResponse<String> getRelease(ObjectId componentId, String teamId);
 }

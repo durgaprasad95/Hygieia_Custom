@@ -40,12 +40,15 @@ public class BuildServiceImpl implements BuildService {
 	private final ComponentRepository componentRepository;
 	private final CollectorRepository collectorRepository;
 	private final CollectorService collectorService;
+
+	// Value of Release -- for filtering the data
 	@Value("${release}")
 	private String release;
 
 	@Autowired
 	public BuildServiceImpl(BuildRepository buildRepository, ComponentRepository componentRepository,
 			CollectorRepository collectorRepository, CollectorService collectorService) {
+		// default value of release
 		this.release = "3.5.2";
 		this.buildRepository = buildRepository;
 		this.componentRepository = componentRepository;
@@ -90,8 +93,8 @@ public class BuildServiceImpl implements BuildService {
 
 		Iterable<Build> result;
 		if (request.getMax() == null) {
+			// The below query uses a predicate to filter Builds by release
 			result = buildRepository.findAll(build.codeRepos.get(0).branch.eq("release_" + release));
-			// result = buildRepository.findAll(builder.getValue());
 		} else {
 			PageRequest pageRequest = new PageRequest(0, request.getMax(), Sort.Direction.DESC, "timestamp");
 			result = buildRepository.findAll(builder.getValue(), pageRequest).getContent();

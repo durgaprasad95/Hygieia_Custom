@@ -136,8 +136,7 @@ public class FeatureControllerTest {
 		mockV1Feature.setsProjectID("Scope:231870");
 		mockV1Feature.setsProjectIsDeleted("False");
 		mockV1Feature.setsProjectName("Test Scope 1");
-		mockV1Feature.setsProjectPath("Top -> Middle -> Bottome -> "
-				+ mockV1Feature.getsProjectName());
+		mockV1Feature.setsProjectPath("Top -> Middle -> Bottome -> " + mockV1Feature.getsProjectName());
 		mockV1Feature.setsProjectState("Active");
 		mockV1Feature.setsSprintAssetState("Inactive");
 		mockV1Feature.setsSprintBeginDate(generalUseDate);
@@ -315,46 +314,44 @@ public class FeatureControllerTest {
 		features.add(mockV1Feature);
 		features.add(mockJiraFeature);
 		features.add(mockJiraFeature2);
-		DataResponse<List<Feature>> response = new DataResponse<>(features,
-				mockV1Collector.getLastExecuted());
+		DataResponse<List<Feature>> response = new DataResponse<>(features, mockV1Collector.getLastExecuted());
 
-		when(featureService.getFeatureEpicEstimates(mockComponentId, testTeamId, testProjectId, Optional.empty(), Optional.empty())).thenReturn(response);
-		mockMvc.perform(get("/feature?component=" + mockComponentId.toString() + "&projectId=" + testProjectId + "&teamId=" + testTeamId))
-				.andExpect(status().isOk());
+		when(featureService.getFeatureEpicEstimates(mockComponentId, testTeamId, Optional.empty(), Optional.empty()))
+				.thenReturn(response);
+		mockMvc.perform(get("/feature?component=" + mockComponentId.toString() + "&projectId=" + testProjectId
+				+ "&teamId=" + testTeamId)).andExpect(status().isOk());
 	}
 
 	@Test
 	public void testFeatureEstimates_HappyPath() throws Exception {
 		String testTeamId = mockV1Feature.getsTeamID();
-        String testProjectId = mockV1Feature.getsProjectID();		
+		String testProjectId = mockV1Feature.getsProjectID();
 		List<Feature> features = new ArrayList<Feature>();
 		features.add(mockV1Feature);
 		features.add(mockJiraFeature);
 		features.add(mockJiraFeature2);
-		DataResponse<List<Feature>> response = new DataResponse<>(features,
-				mockV1Collector.getLastExecuted());
+		DataResponse<List<Feature>> response = new DataResponse<>(features, mockV1Collector.getLastExecuted());
 
-		when(featureService.getFeatureEpicEstimates(mockComponentId, testTeamId, testProjectId, Optional.empty(), Optional.empty())).thenReturn(response);
-		mockMvc.perform(
-				get("/feature/estimates/super?component="
-						+ mockComponentId.toString() + "&projectId=" + testProjectId + "&teamId=" + testTeamId)).andExpect(status().isOk());
+		when(featureService.getFeatureEpicEstimates(mockComponentId, testTeamId, Optional.empty(), Optional.empty()))
+				.thenReturn(response);
+		mockMvc.perform(get("/feature/estimates/super?component=" + mockComponentId.toString() + "&projectId="
+				+ testProjectId + "&teamId=" + testTeamId)).andExpect(status().isOk());
 	}
 
 	@Test
 	public void testFeatureEstimates_SameEpicWithEstimates_UniqueResponse() throws Exception {
 		String testTeamId = mockV1Feature.getsTeamID();
-        String testProjectId = mockV1Feature.getsProjectID();
+		String testProjectId = mockV1Feature.getsProjectID();
 		List<Feature> features = new ArrayList<Feature>();
 		features.add(mockV1Feature);
 		features.add(mockJiraFeature);
 		features.add(mockJiraFeature2);
-		DataResponse<List<Feature>> response = new DataResponse<>(features,
-				mockV1Collector.getLastExecuted());
+		DataResponse<List<Feature>> response = new DataResponse<>(features, mockV1Collector.getLastExecuted());
 
-		when(featureService.getFeatureEpicEstimates(mockComponentId, testTeamId, testProjectId, Optional.empty(), Optional.empty())).thenReturn(response);
-		mockMvc.perform(
-				get("/feature/estimates/super/?component="
-						+ mockComponentId.toString() + "&projectId=" + testProjectId + "&teamId=" + testTeamId))
+		when(featureService.getFeatureEpicEstimates(mockComponentId, testTeamId, Optional.empty(), Optional.empty()))
+				.thenReturn(response);
+		mockMvc.perform(get("/feature/estimates/super/?component=" + mockComponentId.toString() + "&projectId="
+				+ testProjectId + "&teamId=" + testTeamId))
 				.andExpect(jsonPath("$.result[0].sEpicNumber", is(mockV1Feature.getsEpicNumber())))
 				.andExpect(jsonPath("$.result[0].sEstimate", is(mockV1Feature.getsEstimate())))
 				.andExpect(jsonPath("$.result", hasSize(3)));

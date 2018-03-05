@@ -71,9 +71,11 @@ public class FeatureServiceImpl implements FeatureService {
 	private final FeatureRepository featureRepository;
 	private final CollectorRepository collectorRepository;
 
+	// For filtering the data by its value
 	@Value("${release}")
 	private String release;
 
+	// Start and End Dates -- To know if a Feature is of this Sprint or some Other
 	private static Map<String, Date> dates;
 
 	/**
@@ -109,7 +111,6 @@ public class FeatureServiceImpl implements FeatureService {
 			dates.put("IAT S", sdf.parse("2018-01-23"));
 			dates.put("IAT E", sdf.parse("2018-02-09"));
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -143,128 +144,6 @@ public class FeatureServiceImpl implements FeatureService {
 		List<Feature> story = featureRepository.getStoryByNumber(storyNumber);
 		Collector collector = collectorRepository.findOne(item.getCollectorId());
 		return new DataResponse<>(story, collector.getLastExecuted());
-	}
-
-	/**
-	 * Retrieves all stories for a given team and their current sprint
-	 *
-	 * @param componentId
-	 *            The ID of the related UI component that will reference collector
-	 *            item content from this collector
-	 * @param teamId
-	 *            A given scope-owner's source-system ID
-	 * @return A data response list of type Feature containing all features for the
-	 *         given team and current sprint
-	 */
-	@Override
-	public DataResponse<List<Feature>> getRelevantStories(ObjectId componentId, String teamId, String projectId,
-			Optional<String> agileType) {
-		Component component = componentRepository.findOne(componentId);
-		if ((component == null) || CollectionUtils.isEmpty(component.getCollectorItems())
-				|| CollectionUtils.isEmpty(component.getCollectorItems().get(CollectorType.AgileTool))
-				|| (component.getCollectorItems().get(CollectorType.AgileTool).get(0) == null)) {
-			return getEmptyLegacyDataResponse();
-		}
-
-		CollectorItem item = component.getCollectorItems().get(CollectorType.AgileTool).get(0);
-
-		QScopeOwner team = new QScopeOwner("team");
-		BooleanBuilder builder = new BooleanBuilder();
-		builder.and(team.collectorItemId.eq(item.getId()));
-
-		// Get teamId first from available collector item, based on component
-		List<Feature> relevantStories = getFeaturesForCurrentSprints(teamId, projectId, item.getCollectorId(),
-				agileType.isPresent() ? agileType.get() : null, false);
-
-		Collector collector = collectorRepository.findOne(item.getCollectorId());
-
-		return new DataResponse<>(relevantStories, collector.getLastExecuted());
-	}
-
-	/**
-	 * Retrieves all unique super features and their total sub feature estimates for
-	 * a given team and their current sprint
-	 *
-	 * @param componentId
-	 *            The ID of the related UI component that will reference collector
-	 *            item content from this collector
-	 * @param teamId
-	 *            A given scope-owner's source-system ID
-	 * @return A data response list of type Feature containing the unique features
-	 *         plus their sub features' estimates associated to the current sprint
-	 *         and team
-	 */
-	@Override
-	public DataResponse<List<Feature>> getFeatureEpicEstimates(ObjectId componentId, String teamId, String projectId,
-			Optional<String> agileType, Optional<String> estimateMetricType) {
-		Component component = componentRepository.findOne(componentId);
-
-		if ((component == null) || CollectionUtils.isEmpty(component.getCollectorItems())
-				|| CollectionUtils.isEmpty(component.getCollectorItems().get(CollectorType.AgileTool))
-				|| (component.getCollectorItems().get(CollectorType.AgileTool).get(0) == null)) {
-			return getEmptyLegacyDataResponse();
-		}
-
-		CollectorItem item = component.getCollectorItems().get(CollectorType.AgileTool).get(0);
-
-		List<Feature> relevantFeatureEstimates = getFeaturesForCurrentSprints(teamId, projectId, item.getCollectorId(),
-				agileType.isPresent() ? agileType.get() : null, true);
-
-		// epicID : epic information (in the form of a Feature object)
-		Map<String, Feature> epicIDToEpicFeatureMap = new HashMap<>();
-
-		for (Feature tempRs : relevantFeatureEstimates) {
-			String epicID = tempRs.getsEpicID();
-
-			if (StringUtils.isEmpty(epicID))
-				continue;
-
-			Feature feature = epicIDToEpicFeatureMap.get(epicID);
-			if (feature == null) {
-				feature = new Feature();
-				feature.setId(null);
-				feature.setsEpicID(epicID);
-				feature.setsEpicNumber(tempRs.getsEpicNumber());
-				feature.setsEpicUrl(tempRs.getsEpicUrl());
-				feature.setsEpicName(tempRs.getsEpicName());
-				feature.setsEstimate("0");
-				epicIDToEpicFeatureMap.put(epicID, feature);
-			}
-
-			// if estimateMetricType is hours accumulate time estimate in minutes for better
-			// precision ... divide by 60 later
-			int estimate = getEstimate(tempRs, estimateMetricType);
-
-			feature.setsEstimate(String.valueOf(Integer.valueOf(feature.getsEstimate()) + estimate));
-		}
-
-		if (isEstimateTime(estimateMetricType)) {
-			// time estimate is in minutes but we want to return in hours
-			for (Feature f : epicIDToEpicFeatureMap.values()) {
-				f.setsEstimate(String.valueOf(Integer.valueOf(f.getsEstimate()) / 60));
-			}
-		}
-
-		Collector collector = collectorRepository.findOne(item.getCollectorId());
-		return new DataResponse<>(new ArrayList<>(epicIDToEpicFeatureMap.values()), collector.getLastExecuted());
-	}
-
-	@Override
-	public DataResponse<SprintEstimate> getAggregatedSprintEstimates(ObjectId componentId, String teamId,
-			String projectId, Optional<String> agileType, Optional<String> estimateMetricType) {
-		Component component = componentRepository.findOne(componentId);
-		if ((component == null) || CollectionUtils.isEmpty(component.getCollectorItems())
-				|| CollectionUtils.isEmpty(component.getCollectorItems().get(CollectorType.AgileTool))
-				|| (component.getCollectorItems().get(CollectorType.AgileTool).get(0) == null)) {
-			return new DataResponse<SprintEstimate>(new SprintEstimate(), 0);
-		}
-
-		CollectorItem item = component.getCollectorItems().get(CollectorType.AgileTool).get(0);
-		Collector collector = collectorRepository.findOne(item.getCollectorId());
-
-		SprintEstimate estimate = getSprintEstimates(teamId, projectId, item.getCollectorId(), agileType,
-				estimateMetricType);
-		return new DataResponse<>(estimate, collector.getLastExecuted());
 	}
 
 	/**
@@ -375,36 +254,6 @@ public class FeatureServiceImpl implements FeatureService {
 		return new DataResponse<>(list, collector.getLastExecuted());
 	}
 
-	/**
-	 * Retrieves the current sprint's detail for a given team.
-	 *
-	 * @param componentId
-	 *            The ID of the related UI component that will reference collector
-	 *            item content from this collector
-	 * @param teamId
-	 *            A given scope-owner's source-system ID
-	 * @return A data response list of type Feature containing several relevant
-	 *         sprint fields for the current team's sprint
-	 */
-	@Override
-	public DataResponse<List<Feature>> getCurrentSprintDetail(ObjectId componentId, String teamId, String projectId,
-			Optional<String> agileType) {
-		Component component = componentRepository.findOne(componentId);
-		if ((component == null) || CollectionUtils.isEmpty(component.getCollectorItems())
-				|| CollectionUtils.isEmpty(component.getCollectorItems().get(CollectorType.AgileTool))
-				|| (component.getCollectorItems().get(CollectorType.AgileTool).get(0) == null)) {
-			return getEmptyLegacyDataResponse();
-		}
-
-		CollectorItem item = component.getCollectorItems().get(CollectorType.AgileTool).get(0);
-
-		// Get teamId first from available collector item, based on component
-		List<Feature> sprintResponse = getFeaturesForCurrentSprints(teamId, projectId, item.getCollectorId(),
-				agileType.isPresent() ? agileType.get() : null, true);
-		Collector collector = collectorRepository.findOne(item.getCollectorId());
-		return new DataResponse<>(sprintResponse, collector.getLastExecuted());
-	}
-
 	@SuppressWarnings("PMD.NPathComplexity")
 	private SprintEstimate getSprintEstimates(String teamId, String projectId, ObjectId collectorId,
 			Optional<String> agileType, Optional<String> estimateMetricType) {
@@ -458,100 +307,6 @@ public class FeatureServiceImpl implements FeatureService {
 	}
 
 	/**
-	 * Get the features that belong to the current sprints
-	 * 
-	 * @param teamId
-	 *            the team id
-	 * @param agileType
-	 *            the agile type. Defaults to "scrum" if null
-	 * @param minimal
-	 *            if the resulting list of Features should be minimally populated
-	 *            (see queries for fields)
-	 * @return
-	 */
-	private List<Feature> getFeaturesForCurrentSprints(String teamId, String projectId, ObjectId collectorId,
-			String agileType, boolean minimal) {
-		List<Feature> rt = new ArrayList<Feature>();
-
-		String now = getCurrentISODateTime();
-
-		if (FeatureCollectorConstants.SPRINT_KANBAN.equalsIgnoreCase(agileType)) {
-			/*
-			 * A feature is part of a kanban sprint if any of the following are true: - the
-			 * feature does not have a sprint set - the feature has a sprint set that does
-			 * not have an end date - the feature has a sprint set that has an end date >=
-			 * EOT (9999-12-31T59:59:59.999999)
-			 */
-			rt.addAll(featureRepository.findByNullSprints(teamId, projectId, collectorId, minimal));
-			rt.addAll(featureRepository.findByUnendingSprints(teamId, projectId, collectorId, minimal));
-		} else {
-			// default to scrum
-			/*
-			 * A feature is part of a scrum sprint if any of the following are true: - the
-			 * feature has a sprint set that has start <= now <= end and end < EOT
-			 * (9999-12-31T59:59:59.999999)
-			 */
-			rt.addAll(featureRepository.findByActiveEndingSprints(teamId, projectId, collectorId, now, minimal));
-		}
-
-		return rt;
-	}
-
-	private DataResponse<List<Feature>> getEmptyLegacyDataResponse() {
-		Feature f = new Feature();
-		List<Feature> l = new ArrayList<>();
-		l.add(f);
-		return new DataResponse<>(l, 0);
-	}
-
-	/**
-	 * Retrieves the current system time stamp in ISO date time format. Because this
-	 * is not using SimpleTimeFormat, this should be thread safe.
-	 *
-	 * @return A string representation of the current date time stamp in ISO format
-	 *         from the current time zone
-	 */
-	private String getCurrentISODateTime() {
-		return DatatypeConverter.printDateTime(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-	}
-
-	private boolean isEstimateTime(Optional<String> estimateMetricType) {
-		return estimateMetricType.isPresent()
-				&& FeatureCollectorConstants.STORY_HOURS_ESTIMATE.equalsIgnoreCase(estimateMetricType.get());
-	}
-
-	private boolean isEstimateCount(Optional<String> estimateMetricType) {
-		return estimateMetricType.isPresent()
-				&& FeatureCollectorConstants.STORY_COUNT_ESTIMATE.equalsIgnoreCase(estimateMetricType.get());
-	}
-
-	private int getEstimate(Feature feature, Optional<String> estimateMetricType) {
-		int rt = 0;
-
-		if (isEstimateTime(estimateMetricType)) {
-			if (feature.getsEstimateTime() != null) {
-				rt = feature.getsEstimateTime().intValue();
-			}
-		} else if (isEstimateCount(estimateMetricType)) {
-			rt = 1;
-		} else {
-			// default to story points since that should be the most common use case
-			if (!StringUtils.isEmpty(feature.getsEstimate())) {
-				try {
-					rt = (int) Float.parseFloat(feature.getsEstimate());
-				} catch (NumberFormatException nfe) {
-					rt = 0;
-					LOG.error("Could not parse estimate for '" + feature.getsName() + "', number '"
-							+ feature.getsNumber() + "', have estimate: " + feature.getsEstimate(), nfe);
-				}
-			}
-		}
-
-		return rt;
-	}
-
-	// These are the Custom methods for Rally Feature Collector only
-	/**
 	 * Retrieves all stories for a given team and their current sprint
 	 *
 	 * @param componentId
@@ -587,6 +342,118 @@ public class FeatureServiceImpl implements FeatureService {
 		return new DataResponse<>(relevantStories, collector.getLastExecuted());
 	}
 
+	@Override
+	public DataResponse<Map<String, List<Feature>>> getStories(ObjectId componentId) {
+		Component component = componentRepository.findOne(componentId);
+		QFeature feature = new QFeature("Feature");
+		Map<String, List<Feature>> featuresMap = new HashMap<String, List<Feature>>();
+		if ((component == null) || CollectionUtils.isEmpty(component.getCollectorItems())
+				|| CollectionUtils.isEmpty(component.getCollectorItems().get(CollectorType.AgileTool))
+				|| (component.getCollectorItems().get(CollectorType.AgileTool).get(0) == null)) {
+			return new DataResponse<>(featuresMap, 0);
+		}
+		BooleanBuilder builder1 = new BooleanBuilder();
+		builder1.and(feature.sTeamID.eq(FeatureServiceImpl.TEAM_ID));
+		List<Feature> userStories = (List<Feature>) featureRepository
+				.findAll(builder1.and(feature.sTypeName.eq("HierarchicalRequirement")));
+		BooleanBuilder builder2 = new BooleanBuilder();
+		builder2.and(feature.sTeamID.eq(FeatureServiceImpl.TEAM_ID));
+		List<Feature> defects = (List<Feature>) featureRepository.findAll(builder2.and(feature.sTypeName.eq("Defect")));
+		featuresMap.put("US", userStories);
+		// Setting the new prop for defects which is
+		// When it is raised
+		defects = setPropCreationDate(defects);
+		featuresMap.put("DE", defects);
+		CollectorItem item = component.getCollectorItems().get(CollectorType.AgileTool).get(0);
+		Collector collector = collectorRepository.findOne(item.getCollectorId());
+		return new DataResponse<>(featuresMap, collector.getLastExecuted());
+	}
+
+	/**
+	 * @return Default Data response that needs to be send as response to ajax call
+	 *         at the time of empty result
+	 */
+	private DataResponse<List<Feature>> getEmptyLegacyDataResponse() {
+		Feature f = new Feature();
+		List<Feature> l = new ArrayList<>();
+		l.add(f);
+		return new DataResponse<>(l, 0);
+	}
+
+	/**
+	 * Retrieves the current system time stamp in ISO date time format. Because this
+	 * is not using SimpleTimeFormat, this should be thread safe.
+	 *
+	 * @return A string representation of the current date time stamp in ISO format
+	 *         from the current time zone
+	 */
+	private String getCurrentISODateTime() {
+		return DatatypeConverter.printDateTime(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+	}
+
+	private boolean isEstimateTime(Optional<String> estimateMetricType) {
+		return estimateMetricType.isPresent()
+				&& FeatureCollectorConstants.STORY_HOURS_ESTIMATE.equalsIgnoreCase(estimateMetricType.get());
+	}
+
+	private boolean isEstimateCount(Optional<String> estimateMetricType) {
+		return estimateMetricType.isPresent()
+				&& FeatureCollectorConstants.STORY_COUNT_ESTIMATE.equalsIgnoreCase(estimateMetricType.get());
+	}
+
+	private List<Feature> getFeaturesForCurrentSprints(String teamId, String projectId, ObjectId collectorId,
+			String agileType, boolean minimal) {
+		List<Feature> rt = new ArrayList<Feature>();
+
+		String now = getCurrentISODateTime();
+
+		if (FeatureCollectorConstants.SPRINT_KANBAN.equalsIgnoreCase(agileType)) {
+			/*
+			 * A feature is part of a kanban sprint if any of the following are true: - the
+			 * feature does not have a sprint set - the feature has a sprint set that does
+			 * not have an end date - the feature has a sprint set that has an end date >=
+			 * EOT (9999-12-31T59:59:59.999999)
+			 */
+			rt.addAll(featureRepository.findByNullSprints(teamId, projectId, collectorId, minimal));
+			rt.addAll(featureRepository.findByUnendingSprints(teamId, projectId, collectorId, minimal));
+		} else {
+			// default to scrum
+			/*
+			 * A feature is part of a scrum sprint if any of the following are true: - the
+			 * feature has a sprint set that has start <= now <= end and end < EOT
+			 * (9999-12-31T59:59:59.999999)
+			 */
+			rt.addAll(featureRepository.findByActiveEndingSprints(teamId, projectId, collectorId, now, minimal));
+		}
+
+		return rt;
+	}
+
+	private int getEstimate(Feature feature, Optional<String> estimateMetricType) {
+		int rt = 0;
+
+		if (isEstimateTime(estimateMetricType)) {
+			if (feature.getsEstimateTime() != null) {
+				rt = feature.getsEstimateTime().intValue();
+			}
+		} else if (isEstimateCount(estimateMetricType)) {
+			rt = 1;
+		} else {
+			// default to story points since that should be the most common use case
+			if (!StringUtils.isEmpty(feature.getsEstimate())) {
+				try {
+					rt = (int) Float.parseFloat(feature.getsEstimate());
+				} catch (NumberFormatException nfe) {
+					rt = 0;
+					LOG.error("Could not parse estimate for '" + feature.getsName() + "', number '"
+							+ feature.getsNumber() + "', have estimate: " + feature.getsEstimate(), nfe);
+				}
+			}
+		}
+
+		return rt;
+	}
+
 	/**
 	 * Retrieves all unique super features and their total sub feature estimates for
 	 * a given team and their current sprint
@@ -600,6 +467,30 @@ public class FeatureServiceImpl implements FeatureService {
 	 *         plus their sub features' estimates associated to the current sprint
 	 *         and team
 	 */
+	@Override
+	public DataResponse<Collection<Feature>> getSuperStories(ObjectId componentId) {
+		Map<String, Feature> superStoriesMap = new HashMap<String, Feature>();
+		Component component = componentRepository.findOne(componentId);
+		List<Feature> superStories = new ArrayList<Feature>();
+		if ((component == null) || CollectionUtils.isEmpty(component.getCollectorItems())
+				|| CollectionUtils.isEmpty(component.getCollectorItems().get(CollectorType.AgileTool))
+				|| (component.getCollectorItems().get(CollectorType.AgileTool).get(0) == null)) {
+			return new DataResponse<>((superStoriesMap.values()), 0);
+		}
+		QFeature feature = new QFeature("Feature");
+		for (Feature tempFeature : featureRepository.findAll(feature.sTeamID.eq(FeatureServiceImpl.TEAM_ID))) {
+			if ((null != tempFeature.getsEpicUrl())) {
+				Feature temp = new Feature();
+				temp.setsName(tempFeature.getsEpicName());
+				temp.setsNumber(tempFeature.getsEpicNumber());
+				superStoriesMap.put(temp.getsNumber(), temp);
+			}
+		}
+		CollectorItem item = component.getCollectorItems().get(CollectorType.AgileTool).get(0);
+		Collector collector = collectorRepository.findOne(item.getCollectorId());
+		return new DataResponse<>(superStoriesMap.values(), collector.getLastExecuted());
+	}
+
 	@Override
 	public DataResponse<List<Feature>> getFeatureEpicEstimates(ObjectId componentId, String teamId,
 			Optional<String> agileType, Optional<String> estimateMetricType) {
@@ -806,7 +697,18 @@ public class FeatureServiceImpl implements FeatureService {
 		return rt;
 	}
 
-	/* number of stories that are present for a given type of agiletype */
+	/**
+	 * Calculates count of particular Features types for a team
+	 * 
+	 * @param componentId
+	 *            The ID of the related UI component that will reference collector
+	 *            item content from this collector
+	 * @param agiletype
+	 *            A given String assigned from UI
+	 * 
+	 * @return A data response list of type Feature containing feature Type and its
+	 *         Count
+	 */
 	@Override
 	public DataResponse<Map<String, Long>> getCount(ObjectId componentId, String agileType) {
 		Component component = componentRepository.findOne(componentId);
@@ -834,6 +736,17 @@ public class FeatureServiceImpl implements FeatureService {
 
 	}
 
+	/**
+	 * Assigns Release by which we filter out Features for a team
+	 * 
+	 * @param componentId
+	 *            The ID of the related UI component that will reference collector
+	 *            item content from this collector
+	 * @param teamId
+	 *            A given scope-owner's source-system ID
+	 * 
+	 * @return A data response String which represents release version
+	 */
 	@Override
 	public DataResponse<String> getRelease(ObjectId componentId, String teamId) {
 		Component component = componentRepository.findOne(componentId);
@@ -843,57 +756,18 @@ public class FeatureServiceImpl implements FeatureService {
 		return new DataResponse<>(release, collector.getLastExecuted());
 	}
 
-	@Override
-	public DataResponse<Collection<Feature>> getSuperStories(ObjectId componentId) {
-		Map<String, Feature> superStoriesMap = new HashMap<String, Feature>();
-		Component component = componentRepository.findOne(componentId);
-		List<Feature> superStories = new ArrayList<Feature>();
-		if ((component == null) || CollectionUtils.isEmpty(component.getCollectorItems())
-				|| CollectionUtils.isEmpty(component.getCollectorItems().get(CollectorType.AgileTool))
-				|| (component.getCollectorItems().get(CollectorType.AgileTool).get(0) == null)) {
-			return new DataResponse<>((superStoriesMap.values()), 0);
-		}
-		QFeature feature = new QFeature("Feature");
-		for (Feature tempFeature : featureRepository.findAll(feature.sTeamID.eq(FeatureServiceImpl.TEAM_ID))) {
-			if ((null != tempFeature.getsEpicUrl())) {
-				Feature temp = new Feature();
-				temp.setsName(tempFeature.getsEpicName());
-				temp.setsNumber(tempFeature.getsEpicNumber());
-				superStoriesMap.put(temp.getsNumber(), temp);
-			}
-		}
-		CollectorItem item = component.getCollectorItems().get(CollectorType.AgileTool).get(0);
-		Collector collector = collectorRepository.findOne(item.getCollectorId());
-		return new DataResponse<>(superStoriesMap.values(), collector.getLastExecuted());
-	}
-
-	@Override
-	public DataResponse<Map<String, List<Feature>>> getStories(ObjectId componentId) {
-		Component component = componentRepository.findOne(componentId);
-		QFeature feature = new QFeature("Feature");
-		Map<String, List<Feature>> featuresMap = new HashMap<String, List<Feature>>();
-		if ((component == null) || CollectionUtils.isEmpty(component.getCollectorItems())
-				|| CollectionUtils.isEmpty(component.getCollectorItems().get(CollectorType.AgileTool))
-				|| (component.getCollectorItems().get(CollectorType.AgileTool).get(0) == null)) {
-			return new DataResponse<>(featuresMap, 0);
-		}
-		BooleanBuilder builder1 = new BooleanBuilder();
-		builder1.and(feature.sTeamID.eq(FeatureServiceImpl.TEAM_ID));
-		List<Feature> userStories = (List<Feature>) featureRepository
-				.findAll(builder1.and(feature.sTypeName.eq("HierarchicalRequirement")));
-		BooleanBuilder builder2 = new BooleanBuilder();
-		builder2.and(feature.sTeamID.eq(FeatureServiceImpl.TEAM_ID));
-		List<Feature> defects = (List<Feature>) featureRepository.findAll(builder2.and(feature.sTypeName.eq("Defect")));
-		featuresMap.put("US", userStories);
-		// Setting the new prop for defects which is
-		// When it is raised
-		defects = setPropCreationDate(defects);
-		featuresMap.put("DE", defects);
-		CollectorItem item = component.getCollectorItems().get(CollectorType.AgileTool).get(0);
-		Collector collector = collectorRepository.findOne(item.getCollectorId());
-		return new DataResponse<>(featuresMap, collector.getLastExecuted());
-	}
-
+	/**
+	 * Filtering all Features (Only defects) for a team to determine the one that
+	 * are Defect Leakages
+	 * 
+	 * @param componentId
+	 *            The ID of the related UI component that will reference collector
+	 *            item content from this collector
+	 * @param defets
+	 *            A given list of defects
+	 * 
+	 * @return A data response List which are defect leakages
+	 */
 	@SuppressWarnings("deprecation")
 	private List<Feature> setPropCreationDate(List<Feature> defects) {
 
