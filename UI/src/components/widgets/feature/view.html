@@ -33,9 +33,6 @@
 				</div>
 			</div>
 		</div>
-	</div>
-
-	<div class="widget">
 		<div class="widget-body">
 			<div class="widget-heading">Epics</div>
 			<div class="dash-row clickable" ng-repeat="epic in ctrl.epicStories"
@@ -44,7 +41,9 @@
 				<div class="dash-overflow story-open">{{epic.sName}}</div>
 			</div>
 		</div>
+	</div>
 
+	<div class="widget">
 		<div class="widget-body" ng-if="ctrl.listType === 'issues'">
 			<div class="widget-heading">
 				Issues in Progress

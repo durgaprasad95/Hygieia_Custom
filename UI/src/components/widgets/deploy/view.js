@@ -12,7 +12,7 @@
 
 	// public variables
 	ctrl.deployments = [];
-	
+
 	if ($scope.widgetConfig.options.ignoreRegex !== undefined
 		&& $scope.widgetConfig.options.ignoreRegex !== null
 		&& $scope.widgetConfig.options.ignoreRegex !== '') {
@@ -106,7 +106,7 @@
 		}
 	    });
 	    ctrl.deployments = data;
-	    console.log(ctrl.deployments);
+	    console.log(ctrl.deployments.length);
 	}
     }
 })();

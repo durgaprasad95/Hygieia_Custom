@@ -84,29 +84,20 @@ public class FeatureCollectorTask extends CollectorTask<FeatureCollector> {
 	public void collect(FeatureCollector collector) {
 		ProjectDataClient projectClient = new ProjectDataClient(dataFactory, projectRepository,
 				featureCollectorRepository);
-		// TeamDataClient teamClient = new
-		// TeamDataClient(dataFactory,teamRepository,featureCollectorRepository);
 		StoryDataClient storyClient = new StoryDataClient(dataFactory, featureCollectorRepository, featureRepository);
 		try {
 			LOGGER.info("Fetching Projects");
 			projectClient.updateMongoInfo();
-			/*
-			 * LOGGER.info("Fetching Teams");
-			 * 
-			 * These Lines are not required teamClient.updateMongoInfo();
-			 */ LOGGER.info("Fetching Stories");
-
+			LOGGER.info("Fetching Stories");
 			storyClient.updateMongoinfo();
+			LOGGER.info("Completed Getting Data");
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
 			LOGGER.info("URI Syntax");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			LOGGER.info(e.getMessage());
 		} catch (DuplicateKeyException e) {
 			LOGGER.info(e.getMessage());
 		}
-		LOGGER.info("Completed...");
 	}
 
 }

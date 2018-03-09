@@ -1,11 +1,11 @@
 <div class="deploy-view">
+	<div class="dash-row" ng-hide="deployView.deployments.length>0">
+		<p class="text-center text-info">Please wait..... Getting data
+			from server</p>
+	</div>
 	<table class="table">
-		<tr class="dash-row" ng-hide="deployView.deployments.length>0">
-			<td class="text-center text-info">Please wait..... Getting data
-				from server</td>
-		</tr>
 		<tbody
-			ng-repeat="deployment in deployView.deployments | filter :{'appVersion':'3.7.0.3'} | limitTo : 7 ">
+			ng-repeat="deployment in deployView.deployments | filter:{'appVersion':'3.8'} | limitTo: 7">
 			<tr class="dash-row">
 				<td class="dash-overflow environment-name">{{deployment.farm}}</td>
 				<td class="text-standard-date">{{deployment.deployDate |fromNow

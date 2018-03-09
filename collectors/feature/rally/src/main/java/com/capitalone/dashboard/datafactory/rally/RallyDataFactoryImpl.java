@@ -93,7 +93,6 @@ public class RallyDataFactoryImpl implements RallyDataFactory {
 		List<Feature> stories = new ArrayList<>();
 		RallyRestApi restApi = getRallyClient();
 		String projectRef = "/project/";
-		// String objectID = "116655943108";
 		for (ScopeOwnerCollectorItem user : getUsers()) {
 			int i = 0;
 			String objectID = user.getTeamId();
@@ -107,7 +106,7 @@ public class RallyDataFactoryImpl implements RallyDataFactory {
 					"LastUpdateDate", "ScheduleState", "CreationDate", "Owner", "Project", "Iteration", "Parent"));
 			request.setScopedDown(true);
 			request.setProject(projectRef + objectID);
-
+			System.out.println(objectID);
 			for (String iterationName : getFilterItearations(restApi, projectRef, objectID,
 					featureSettings.getFilter())) {
 				if (agileType.equals("scrum")) {
@@ -286,6 +285,7 @@ public class RallyDataFactoryImpl implements RallyDataFactory {
 
 	private List<String> getFilterItearations(RallyRestApi restApi, String projectRef, String ObjectId, String filter)
 			throws IOException, URISyntaxException {
+		System.out.println(filter);
 		List<String> filterList = new ArrayList<String>();
 		QueryRequest request = new QueryRequest("project/" + ObjectId + "/Iterations");
 		request.setScopedDown(true);
