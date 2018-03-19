@@ -34,7 +34,7 @@ public class DeployController {
 			Deployment[] temp = objectMapper.readValue(url, Deployment[].class);
 			deploys = Arrays.asList(temp);
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println(e.getClass().getSimpleName());
 		}
 		return deploys;
 	}
